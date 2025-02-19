@@ -3,51 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFC Visitenkarte</title>
+    <title>Digitale Visitenkarte</title>
     <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
 </head>
 <body>
-    <h1>Digitale NFC-Visitenkarte</h1>
-    <form id="registerForm">
-        <input type="text" id="name" placeholder="Name" required><br>
-        <input type="text" id="company" placeholder="Firma" required><br>
-        <input type="email" id="email" placeholder="E-Mail" required><br>
-        <input type="password" id="password" placeholder="Passwort" required><br>
-        <button type="submit">Registrieren</button>
-    </form>
-
+    <h1>Willkommen zur digitalen NFC-Visitenkarte</h1>
+    
+    <div id="vCardDownload">
+        <!-- Hier wird der vCard-Link generiert -->
+    </div>
+    
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
-
         const firebaseConfig = {
             apiKey: "AIzaSyBKmHVfaNYbQrs7DkBxoyI5UbvngZ9eI1k",
             authDomain: "nfc-poc-bd710.firebaseapp.com",
             projectId: "nfc-poc-bd710",
             storageBucket: "nfc-poc-bd710.firebasestorage.app",
             messagingSenderId: "657750736935",
-            appId: "1:657750736935:web:53c1c4079e2f446d7a0e02"
+            appId: "1:657750736935:web:53c1c4079e2f446d7a0e02"  
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app);
 
-        document.getElementById("registerForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const name = document.getElementById("name").value;
-            const company = document.getElementById("company").value;
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
+        // Die ID des Benutzers, die du manuell festlegst oder von einer Authentifizierung erhältst
+        const userId = "user1";  // Beispiel-ID eines Benutzers
 
-            const userRef = await addDoc(collection(db, "users"), {
-                name, company, email, password
+        // Abrufen der Benutzerdaten aus Firestore
+        db.collection("users").doc(userId).get()
+            .then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+
+                    // vCard erstellen
+                    const vCard = `
+                    BEGIN:VCARD
+                    VERSION:3.0
+                    FN:${userData.name}
+                    ORG:${userData.company}
+                    TEL:${userData.phone}
+                    EMAIL:${userData.email}
+                    ADR:${userData.address}
+                    URL:${userData.website}
+                    X-SOCIALPROFILE;type=instagram:${userData.instagram}
+                    X-SOCIALPROFILE;type=linkedin:${userData.linkedin}
+                    END:VCARD
+                    `;
+
+                    // vCard zum Download bereitstellen
+                    const vCardBlob = new Blob([vCard], { type: "text/vcard" });
+                    const vCardUrl = URL.createObjectURL(vCardBlob);
+
+                    // Download-Link erstellen
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = vCardUrl;
+                    downloadLink.download = `${userData.name}.vcf`;
+                    downloadLink.innerText = "Klicke hier, um deine vCard herunterzuladen";
+                    document.getElementById("vCardDownload").appendChild(downloadLink);
+                } else {
+                    console.log("Benutzerdaten nicht gefunden");
+                }
+            })
+            .catch((error) => {
+                console.log("Fehler beim Abrufen der Benutzerdaten: ", error);
             });
-
-            alert("Registrierung erfolgreich! Dein Token: " + userRef.id);
-        });
     </script>
 </body>
 </html>
