@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC Visitenkarte</title>
+</head>
+<body>
+    <h1>Digitale NFC-Visitenkarte</h1>
+    <form id="registerForm">
+        <input type="text" id="name" placeholder="Name" required><br>
+        <input type="text" id="company" placeholder="Firma" required><br>
+        <input type="email" id="email" placeholder="E-Mail" required><br>
+        <input type="password" id="password" placeholder="Passwort" required><br>
+        <button type="submit">Registrieren</button>
+    </form>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "DEIN_API_KEY",
+            authDomain: "DEIN_PROJEKT.firebaseapp.com",
+            projectId: "DEIN_PROJEKT_ID",
+            storageBucket: "DEIN_PROJEKT.appspot.com",
+            messagingSenderId: "DEINE_SENDER_ID",
+            appId: "DEINE_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.getElementById("registerForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const name = document.getElementById("name").value;
+            const company = document.getElementById("company").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const userRef = await addDoc(collection(db, "users"), {
+                name, company, email, password
+            });
+
+            alert("Registrierung erfolgreich! Dein Token: " + userRef.id);
+        });
+    </script>
+</body>
+</html>
